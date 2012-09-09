@@ -1,4 +1,5 @@
-# mongoid-siblings
+# mongoid-siblings [![Build Status](https://secure.travis-ci.org/DouweM/mongoid-siblings.png?branch=master)](http://travis-ci.org/DouweM/mongoid-siblings)
+
 
 mongoid-siblings adds methods to enable you to easily access your Mongoid 
 document's siblings.

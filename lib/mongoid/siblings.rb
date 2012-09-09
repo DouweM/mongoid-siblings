@@ -23,7 +23,7 @@ module Mongoid
     # @example Retrieve document's siblings and itself within a certain scope.
     #   book.siblings_and_self(scope: :author)
     #
-    # @example Retrieve what would be document's siblings if it had another scope value
+    # @example Retrieve what would be document's siblings if it had another scope value.
     #   
     #   book.siblings_and_self(
     #     scope:        :author, 
