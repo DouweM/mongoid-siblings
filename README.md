@@ -55,10 +55,10 @@ book.sibling_of!(other_book, scope: [:author, :publisher])
 ```
 
 ## Full documentation
-See [this project's page on RubyDoc.info](http://rubydoc.info/github/DouweM/mongoid-siblings/master/frames).
+See [this project's RubyDoc.info page](http://rubydoc.info/github/DouweM/mongoid-siblings/master/frames).
 
 ## Known issues
-See [https://github.com/DouweM/mongoid-sibling/issues](https://github.com/DouweM/mongoid-siblings/issues).
+See [the GitHub Issues page](https://github.com/DouweM/mongoid-siblings/issues).
 
 ## License
 Copyright (c) 2012 Douwe Maan
