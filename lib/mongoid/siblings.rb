@@ -21,15 +21,14 @@ module Mongoid
     # Returns this document's siblings and itself.
     #
     # @example Retrieve document's siblings and itself within a certain scope.
-    #   blogpost.siblings_and_self(scope: :category)
+    #   book.siblings_and_self(scope: :author)
     #
-    # @example Retrieve what would be document's siblings if it had another 
-    #   scope value
+    # @example Retrieve what would be document's siblings if it had another scope value
     #   
     #   book.siblings_and_self(
     #     scope:        :author, 
     #     scope_values: { 
-    #       category: other_author 
+    #       author: other_author 
     #     }
     #   )
     #
@@ -123,7 +122,7 @@ module Mongoid
     end
     
     # Makes this document a sibling of the other document.
-
+    #
     # This is done by copying over the values used to determine siblingship 
     # from the other document.
     #
