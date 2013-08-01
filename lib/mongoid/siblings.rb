@@ -13,7 +13,7 @@ module Mongoid
     # @example Retrieve document's siblings
     #   book.siblings
     #
-    # @see {#siblings_and_self}
+    # @see #siblings_and_self
     def siblings(options = {})
       self.siblings_and_self(options).excludes(id: self.id)
     end
@@ -164,39 +164,44 @@ module Mongoid
       self.save!
     end
 
-    protected
+    def intelligent_inverse(name, other = nil)
+      other ||= self.send(name)
 
-      def siblings_through_relation(name, other = nil)
-        other ||= self.send(name)
-
-        relation_metadata = self.reflect_on_association(name)
-        inverses = relation_metadata.inverses(other)
-        
-        return nil if inverses.nil? || inverses.empty?
-        
-        if inverses.length == 1
-          inverse = inverses.first
-        elsif relation_metadata.polymorphic?
-          inverse = inverses.find { |inverse| 
-            inverse == self.send(relation_metadata.inverse_of_field) 
-          }
-        else
-          inverse = inverses.find { |inverse| 
-            other.send(inverse).include?(self) 
-          }
-        end
-          
-        return nil if inverse.nil?
-        
-        other.send(inverse)
+      relation_metadata = self.reflect_on_association(name)
+      return nil if relation_metadata.nil?
+      inverses = relation_metadata.inverses(other)
+      
+      return nil if inverses.nil? || inverses.empty?
+      
+      if inverses.length == 1
+        inverses.first
+      elsif relation_metadata.polymorphic?
+        inverse_of = send(relation_metadata.inverse_of_field) 
+        inverses.find { |inverse| inverse == inverse_of }
+      else
+        inverses.find { |inverse| other.send(inverse).include?(self) }
       end
+    end
 
-      def base_document_class(doc = self)
-        base_document_klass = doc.class
-        while base_document_klass.superclass.include?(Mongoid::Document)
-          base_document_klass = base_document_klass.superclass
-        end
-        base_document_klass
+    def intelligent_inverse_metadata(name, other = nil)
+      other ||= self.send(name)
+
+      other.reflect_on_association(self.intelligent_inverse(name, other))
+    end
+
+    def siblings_through_relation(name, other = nil)
+      inverse = self.intelligent_inverse(name, other)
+      return nil if inverse.nil?
+      
+      other.send(inverse)
+    end
+
+    def base_document_class(doc = self)
+      base_document_klass = doc.class
+      while base_document_klass.superclass.include?(Mongoid::Document)
+        base_document_klass = base_document_klass.superclass
       end
+      base_document_klass
+    end
   end
 end
