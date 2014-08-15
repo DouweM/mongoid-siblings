@@ -62,11 +62,13 @@ module Mongoid
         relation_metadata = self.reflect_on_association(scope)
         if relation_metadata && scope_value
           proxy = self.siblings_through_relation(scope, scope_value)
-          next if proxy.nil?
-          criteria = proxy.criteria
-        else
-          detail_scopes << scope
+          if proxy
+            criteria = proxy.criteria
+            next
+          end  
         end
+
+        detail_scopes << scope
       end
 
       # Apply detail criteria, to make sure siblings share every simple 
@@ -75,9 +77,19 @@ module Mongoid
         scope_value = scope_values.fetch(scope) { self.send(scope) }
 
         relation_metadata = self.reflect_on_association(scope)
-        scope_key = relation_metadata ? relation_metadata.key : scope
+        if relation_metadata
+          criteria = criteria.where(relation_metadata.key => scope_value)
 
-        criteria = criteria.where(scope_key => scope_value)
+          if scope_value && relation_metadata.polymorphic?
+            type        = scope_value.class.name
+            inverse_of  = send(relation_metadata.inverse_of_field) 
+            
+            criteria = criteria.where(relation_metadata.inverse_type      => type)
+            criteria = criteria.any_in(relation_metadata.inverse_of_field => [inverse_of, nil])
+          end
+        else
+          criteria = criteria.where(scope => scope_value)
+        end
       end
 
       criteria
@@ -155,10 +167,19 @@ module Mongoid
 
         relation_metadata = self.reflect_on_association(scope)
         if relation_metadata && other_scope_value
-          other.siblings_through_relation(scope, other_scope_value) << self
-        else
-          self.send("#{scope}=", other_scope_value)
+          inverse_metadata = self.intelligent_inverse_metadata(scope, other_scope_value)
+          if inverse_metadata
+            inverse = inverse_metadata.name
+            if inverse_metadata.many?
+              other_scope_value.send(inverse) << self
+            else
+              other_scope_value.send("#{inverse}=", self)
+            end
+
+            next
+          end
         end
+        self.send("#{scope}=", other_scope_value)
       end
 
       self.save!
@@ -179,21 +200,36 @@ module Mongoid
         inverse_of = send(relation_metadata.inverse_of_field) 
         inverses.find { |inverse| inverse == inverse_of }
       else
-        inverses.find { |inverse| other.send(inverse).include?(self) }
+        inverses.find do |inverse| 
+          inverse_metadata = other.reflect_on_association(inverse)
+          children = \
+            if inverse_metadata.embedded?
+              other.send(inverse_metadata.name)
+            else
+              inverse_metadata.criteria(other, other.class)
+            end
+          children.include?(self)
+        end
       end
     end
 
     def intelligent_inverse_metadata(name, other = nil)
       other ||= self.send(name)
-
-      other.reflect_on_association(self.intelligent_inverse(name, other))
-    end
-
-    def siblings_through_relation(name, other = nil)
       inverse = self.intelligent_inverse(name, other)
       return nil if inverse.nil?
+
+      other.reflect_on_association(inverse)
+    end
+
+    def siblings_through_relation(name, other)
+      inverse_metadata = self.intelligent_inverse_metadata(name, other)
+      return nil if inverse_metadata.nil?
       
-      other.send(inverse)
+      if inverse_metadata.embedded?
+        other.send(inverse_metadata.name)
+      else
+        inverse_metadata.criteria(other, other.class)
+      end
     end
 
     def base_document_class(doc = self)

@@ -1,8 +1,11 @@
 class DummySuperParentDocument
   include Mongoid::Document
   
-  has_many :children, class_name: "DummyReferencedChildDocument",
-                      inverse_of: :super_parent
+  has_many :children,         class_name: "DummyReferencedChildDocument",
+                              inverse_of: :super_parent
+
+  has_one :polymorphic_child, class_name: "DummyReferencedChildDocument",
+                              as:         :polymorphic_parent
 end
 
 class DummyParentDocument
@@ -28,8 +31,8 @@ class DummyReferencedChildDocument
   belongs_to :super_parent, class_name: DummySuperParentDocument.to_s,
                             inverse_of: :children
   
-  belongs_to :parent, class_name: DummyParentDocument.to_s,
-                      inverse_of: :referenced_children
+  belongs_to :parent,             class_name: DummyParentDocument.to_s,
+                                  inverse_of: :referenced_children
   belongs_to :polymorphic_parent, polymorphic: true
 end
 

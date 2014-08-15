@@ -142,6 +142,20 @@ describe Mongoid::Siblings do
               subject.siblings(scope: :parent).to_a.should eq([sibling])
             end
           end
+
+          context "when using a single polymorphic relation" do
+            
+            let(:super_parent)  { DummySuperParentDocument.create }
+            let!(:non_sibling)  { DummyReferencedChildDocument.create }
+
+            before(:each) do
+              super_parent.polymorphic_child = subject
+            end
+
+            it "returns the subject's siblings" do
+              subject.siblings(scope: :polymorphic_parent).to_a.should eq([])
+            end
+          end
     
           context "when using multiple polymorphic relations" do
       
