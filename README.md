@@ -51,7 +51,7 @@ book.sibling_of?(other_book, scope: :publisher)
 
 # Make this book a sibling of a book with another author and publisher.
 # This will set this books author and publisher to match that of the other book.
-book.sibling_of!(other_book, scope: [:author, :publisher])
+book.become_sibling_of!(other_book, scope: [:author, :publisher])
 ```
 
 ## Full documentation

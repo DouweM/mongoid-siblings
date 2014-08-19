@@ -624,7 +624,7 @@ describe Mongoid::Siblings do
     end
   end
 
-  describe "#sibling_of!" do
+  describe "#become_sibling_of!" do
 
     context "when called with a sibling" do
       
@@ -633,13 +633,7 @@ describe Mongoid::Siblings do
       let!(:sibling)  { DummyReferencedChildDocument.create(parent: parent) }
 
       it "returns true" do
-        subject.sibling_of!(sibling, scope: :parent).should be_true
-      end
-
-      it "doesn't save the subject" do
-        subject.should_not_receive(:save!)
-
-        subject.sibling_of!(sibling, scope: :parent)
+        subject.become_sibling_of!(sibling, scope: :parent).should be_true
       end
     end
 
@@ -652,7 +646,7 @@ describe Mongoid::Siblings do
         let!(:non_sibling)  { DummyParentDocument.create }
 
         it "returns false" do
-          subject.sibling_of!(non_sibling, scope: :parent).should be_false
+          subject.become_sibling_of!(non_sibling, scope: :parent).should be_false
         end
       end
 
@@ -666,7 +660,7 @@ describe Mongoid::Siblings do
         let(:options)       { [new_sibling, scope: [:parent_id, :super_parent]] }
 
         it "copies the scope values from the object to the subject" do
-          subject.sibling_of!(*options)
+          subject.become_sibling_of!(*options)
 
           subject.parent_id.should eq(new_sibling.parent_id)
           subject.super_parent.should eq(new_sibling.super_parent)
@@ -675,15 +669,15 @@ describe Mongoid::Siblings do
         it "saves the subject" do
           subject.should_receive(:save!)
 
-          subject.sibling_of!(*options)
+          subject.become_sibling_of!(*options)
         end
 
         it "returns true" do
-          subject.sibling_of!(*options).should be_true
+          subject.become_sibling_of!(*options).should be_true
         end
 
         it "makes the subject a sibling of the object" do
-          subject.sibling_of!(*options).should be_true
+          subject.become_sibling_of!(*options).should be_true
 
           subject.should be_sibling_of(*options)
         end

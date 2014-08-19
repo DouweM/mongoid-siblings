@@ -139,7 +139,7 @@ module Mongoid
     # from the other document.
     #
     # @example Make document a sibling of the other document.
-    #   book.sibling_of!(book_of_other_author, scope: :author)
+    #   book.become_sibling_of(book_of_other_author, scope: :author)
     #
     # @param [ Document ] other The document to become a sibling of.
     # @param [ Hash ] options The options.
@@ -151,7 +151,7 @@ module Mongoid
     #
     # @return [ Boolean ] True if the document was made a sibling of the other 
     #   document.
-    def sibling_of!(other, options = {})
+    def become_sibling_of(other, options = {})
       return true if self.sibling_of?(other, options)
 
       scopes              = options[:scope]               || self.default_sibling_scope
@@ -167,7 +167,7 @@ module Mongoid
 
         relation_metadata = self.reflect_on_association(scope)
         if relation_metadata && other_scope_value
-          inverse_metadata = self.intelligent_inverse_metadata(scope, other_scope_value)
+          inverse_metadata = other.intelligent_inverse_metadata(scope, other_scope_value)
           if inverse_metadata
             inverse = inverse_metadata.name
             if inverse_metadata.many?
@@ -181,9 +181,13 @@ module Mongoid
         end
         self.send("#{scope}=", other_scope_value)
       end
-
-      self.save!
     end
+
+    def become_sibling_of!(*args)
+      become_sibling_of(*args) && save!
+    end
+
+    alias_method :sibling_of!, :become_sibling_of!
 
     def intelligent_inverse(name, other = nil)
       other ||= self.send(name)
