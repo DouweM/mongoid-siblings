@@ -81,11 +81,13 @@ module Mongoid
           criteria = criteria.where(relation_metadata.key => scope_value)
 
           if scope_value && relation_metadata.polymorphic?
-            type        = scope_value.class.name
-            inverse_of  = send(relation_metadata.inverse_of_field) 
-            
-            criteria = criteria.where(relation_metadata.inverse_type      => type)
-            criteria = criteria.any_in(relation_metadata.inverse_of_field => [inverse_of, nil])
+            type = scope_value.class.name
+            criteria = criteria.where(relation_metadata.inverse_type => type)
+
+            if relation_metadata.respond_to?(:inverse_of_field)
+              inverse_of  = send(relation_metadata.inverse_of_field) 
+              criteria = criteria.any_in(relation_metadata.inverse_of_field => [inverse_of, nil])
+            end
           end
         else
           criteria = criteria.where(scope => scope_value)
@@ -200,7 +202,7 @@ module Mongoid
       
       if inverses.length == 1
         inverses.first
-      elsif relation_metadata.polymorphic?
+      elsif relation_metadata.polymorphic? && relation_metadata.respond_to?(:inverse_of_field)
         inverse_of = send(relation_metadata.inverse_of_field) 
         inverses.find { |inverse| inverse == inverse_of }
       else
